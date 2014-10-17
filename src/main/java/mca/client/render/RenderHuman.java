@@ -286,7 +286,15 @@ public class RenderHuman extends RenderBiped
 
 					else if (canRenderNameTag(clientEntity))
 					{
-						renderLabel(clientEntity, posX, posY, posZ, clientEntity.getTitle(MCA.getInstance().getIdOfPlayer(Minecraft.getMinecraft().thePlayer), true));
+						if (clientEntity.isInActorMode)
+						{
+							renderLabel(clientEntity, posX, posY, posZ, clientEntity.actorTitle);	
+						}
+						
+						else
+						{
+							renderLabel(clientEntity, posX, posY, posZ, clientEntity.getTitle(MCA.getInstance().getIdOfPlayer(Minecraft.getMinecraft().thePlayer), true));
+						}
 					}
 
 					else if (entity instanceof EntityVillagerAdult)
