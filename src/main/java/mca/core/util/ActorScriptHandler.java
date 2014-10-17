@@ -40,7 +40,7 @@ public final class ActorScriptHandler
 
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			//When loading.
 		}
 	}
 
@@ -144,9 +144,9 @@ public final class ActorScriptHandler
 			}
 		}
 
-		catch (Exception e)
+		catch (IndexOutOfBoundsException e)
 		{
-			e.printStackTrace();
+			waitFlag = true;
 		}
 	}
 
