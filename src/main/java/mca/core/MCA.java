@@ -47,6 +47,7 @@ import mca.core.forge.CommonProxy;
 import mca.core.forge.EventHooks;
 import mca.core.forge.GuiHandler;
 import mca.core.forge.ServerTickHandler;
+import mca.core.util.ActorScriptHandler;
 import mca.core.util.SkinLoader;
 import mca.entity.AbstractEntity;
 import mca.entity.EntityChoreFishHook;
@@ -393,6 +394,9 @@ public class MCA extends UnenforcedCore
 		{
 		}
 
+		//Initialize.
+		ActorScriptHandler.initialize();
+		
 		//Load external data and register proxy methods.
 		modPropertiesManager = new ModPropertiesManager(this, ModPropertiesList.class);
 

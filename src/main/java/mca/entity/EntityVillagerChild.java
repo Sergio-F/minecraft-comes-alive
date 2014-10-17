@@ -145,6 +145,27 @@ public class EntityVillagerChild extends AbstractChild
 	{
 		super.interact(player);
 
+		if (isInActorMode)
+		{
+			final ItemStack itemStack = player.inventory.getCurrentItem();
+			
+			if (!worldObj.isRemote)
+			{
+				if (itemStack != null && itemStack.getItem() instanceof ItemVillagerEditor)
+				{
+					MCA.packetHandler.sendPacketToPlayer(new PacketOpenGui(getEntityId(), Constants.ID_GUI_EDITOR), (EntityPlayerMP) player);
+					return true;
+				}
+				
+				else
+				{
+					scriptHandler.clearWaitFlag();
+				}
+			}
+
+			return false;
+		}
+		
 		if (!worldObj.isRemote)
 		{
 			final PlayerMemory memory = playerMemoryMap.get(player.getCommandSenderName());

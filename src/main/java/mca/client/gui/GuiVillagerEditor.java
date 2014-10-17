@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import mca.core.MCA;
+import mca.core.util.ActorScriptHandler;
 import mca.core.util.Utility;
 import mca.entity.AbstractChild;
 import mca.entity.AbstractEntity;
@@ -53,6 +54,8 @@ public class GuiVillagerEditor extends AbstractGui
 
 	private GuiTextField nameTextField;
 	private GuiTextField dummyTextField;
+	private GuiTextField actorScriptLocationField;
+	private GuiTextField actorNameField;
 	private GuiButton randomButton;
 	private GuiButton genderButton;
 	private GuiButton shiftTextureIndexUpButton;
@@ -83,6 +86,9 @@ public class GuiVillagerEditor extends AbstractGui
 	private GuiButton nextButton;
 	private GuiButton doneButton;
 
+	/** Actor buttons. */
+	private GuiButton actorModeButton;
+	
 	/** Label buttons. */
 	private GuiButton textureButton;
 	private GuiButton moodButton;
@@ -91,7 +97,9 @@ public class GuiVillagerEditor extends AbstractGui
 	/** Variables */
 	private boolean containsInvalidCharacters;
 	private boolean inFamilyTreeGui;
+	private boolean inActorGui;
 	private boolean clearFlag;
+	private boolean scriptValidFlag;
 
 	private final List<EnumMood> moodList = EnumMood.getMoodsAsCyclableList();
 	private int moodListIndex = 0;
@@ -122,7 +130,7 @@ public class GuiVillagerEditor extends AbstractGui
 		try
 		{
 			nameTextField.updateCursorCounter();
-
+			
 			if (nameTextField.getText().isEmpty())
 			{
 				doneButton.enabled = false;
@@ -132,6 +140,8 @@ public class GuiVillagerEditor extends AbstractGui
 			{
 				doneButton.enabled = true;
 			}
+			
+			actorScriptLocationField.updateCursorCounter();
 		}
 
 		catch (final NullPointerException e)
@@ -164,6 +174,16 @@ public class GuiVillagerEditor extends AbstractGui
 
 		dummyTextField = new GuiTextField(fontRendererObj, width / 2 + 90, height / 2 - 100, 100, 200);
 		dummyTextField.setMaxStringLength(0);
+		
+		actorScriptLocationField = new GuiTextField(fontRendererObj, width / 2 - 205, height / 2 - 75, 150, 20);
+		actorScriptLocationField.setMaxStringLength(255);
+		actorScriptLocationField.setText(editingVillager.currentActorScript);
+		
+		actorNameField = new GuiTextField(fontRendererObj, width / 2 - 205, height / 2 - 35, 150, 20);
+		actorNameField.setMaxStringLength(255);
+		actorNameField.setText(editingVillager.actorTitle);
+		
+		scriptValidFlag = ActorScriptHandler.isScriptValid(actorScriptLocationField.getText());
 	}
 
 	@Override
@@ -426,7 +446,7 @@ public class GuiVillagerEditor extends AbstractGui
 					drawEditorGuiPage2();
 					break;
 				case 2:
-					drawEditorGuiPage2();
+					drawActorGui();
 					break;
 			}
 		}
@@ -442,6 +462,9 @@ public class GuiVillagerEditor extends AbstractGui
 						break;
 					case 2:
 						drawEditorGuiPage1();
+						break;
+					case 4:
+						drawEditorGuiPage2();
 						break;
 				}
 			}
@@ -498,6 +521,13 @@ public class GuiVillagerEditor extends AbstractGui
 		{
 			drawFamilyTreeGui();
 		}
+		
+		else if (guibutton == actorModeButton)
+		{
+			editingVillager.isInActorMode = !editingVillager.isInActorMode;
+			MCA.packetHandler.sendPacketToServer(new PacketSetFieldValue(editingVillager.getEntityId(), "isInActorMode", editingVillager.isInActorMode));
+			drawActorGui();
+		}
 	}
 
 	@Override
@@ -532,6 +562,20 @@ public class GuiVillagerEditor extends AbstractGui
 			drawEditorGuiPage1();
 		}
 
+		else if (currentPage == 4)
+		{
+			actorScriptLocationField.textboxKeyTyped(c, i);
+			actorNameField.textboxKeyTyped(c, i);
+			
+			scriptValidFlag = ActorScriptHandler.isScriptValid(actorScriptLocationField.getText());
+			
+			editingVillager.currentActorScript = actorScriptLocationField.getText();
+			editingVillager.actorTitle = actorNameField.getText();
+			
+			MCA.packetHandler.sendPacketToServer(new PacketSetFieldValue(editingVillager.getEntityId(), "currentActorScript", actorScriptLocationField.getText()));
+			MCA.packetHandler.sendPacketToServer(new PacketSetFieldValue(editingVillager.getEntityId(), "actorTitle", actorNameField.getText()));
+		}
+		
 		else if (inFamilyTreeGui)
 		{
 			if (clearFlag)
@@ -676,6 +720,11 @@ public class GuiVillagerEditor extends AbstractGui
 				}
 			}
 		}
+		
+		else if (currentPage == 4)
+		{
+			
+		}
 
 		else
 		{
@@ -693,6 +742,12 @@ public class GuiVillagerEditor extends AbstractGui
 			nameTextField.mouseClicked(clickX, clickY, clicked);
 		}
 
+		else if (currentPage == 4)
+		{
+			actorScriptLocationField.mouseClicked(clickX, clickY, clicked);
+			actorNameField.mouseClicked(clickX, clickY, clicked);
+		}
+		
 		else if (inFamilyTreeGui)
 		{
 			entryTextField.mouseClicked(clickX, clickY, clicked);
@@ -827,8 +882,6 @@ public class GuiVillagerEditor extends AbstractGui
 			shiftGirthUpButton.enabled = false;
 			shiftGirthDownButton.enabled = false;
 		}
-
-		nextButton.enabled = false;
 	}
 
 	private void drawFamilyTreeGui()
@@ -838,6 +891,17 @@ public class GuiVillagerEditor extends AbstractGui
 		buttonList.clear();
 		buttonList.add(backButton = new GuiButton(19, width / 2 - 120, height / 2 + 85, 50, 20, MCA.getInstance().getLanguageLoader().getString("gui.button.back")));
 
+	}
+	
+	private void drawActorGui()
+	{
+		currentPage = 4;
+		inActorGui = true;
+		
+		buttonList.clear();
+		buttonList.add(backButton = new GuiButton(19, width / 2 - 120, height / 2 + 85, 50, 20, MCA.getInstance().getLanguageLoader().getString("gui.button.back")));
+		
+		buttonList.add(actorModeButton = new GuiButton(1, width / 2 - 200, height / 2 - 0, 120, 20, "Actor Mode: " + editingVillager.isInActorMode));
 	}
 
 	private void drawFamilyTreeText()
@@ -927,7 +991,7 @@ public class GuiVillagerEditor extends AbstractGui
 	public void drawScreen(int sizeX, int sizeY, float offset)
 	{
 		drawGradientRect(0, 0, width, height, -1072689136, -804253680);
-
+		
 		if (currentPage != -1)
 		{
 			final int posX = width / 2 + 140;
@@ -991,6 +1055,25 @@ public class GuiVillagerEditor extends AbstractGui
 			}
 		}
 
+		else if (currentPage == 4)
+		{
+			actorScriptLocationField.drawTextBox();
+			actorNameField.drawTextBox();
+			
+			drawString(fontRendererObj, "Script name:", width / 2 - 200, height / 2 - 90, 0xffffff);
+			drawString(fontRendererObj, "(Save scripts as .txt within config/MCA/Scripts)", width / 2 - 200, height / 2 - 50, 0xa0a0a0);
+			
+			if (!scriptValidFlag)
+			{
+				drawString(fontRendererObj, "Script not found!", width / 2 - 50, height / 2 - 70, 0xCC0000);
+			}
+			
+			else
+			{
+				drawString(fontRendererObj, "Script valid.", width / 2 - 50, height / 2 - 70, 0x66FF00);				
+			}
+		}
+		
 		GL11.glPushMatrix();
 		GL11.glScalef(1.5F, 1.5F, 1.5F);
 		drawCenteredString(fontRendererObj, MCA.getInstance().getLanguageLoader().getString("item.editor"), width / 2 - 75, height / 2 - 125, 0xffffff);

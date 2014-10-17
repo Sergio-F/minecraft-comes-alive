@@ -34,6 +34,7 @@ import mca.chore.ChoreWoodcutting;
 import mca.core.Constants;
 import mca.core.MCA;
 import mca.core.WorldPropertiesList;
+import mca.core.util.ActorScriptHandler;
 import mca.core.util.ServerLimits;
 import mca.core.util.TickMarkerBaby;
 import mca.core.util.Utility;
@@ -44,9 +45,11 @@ import mca.enums.EnumMoodChangeContext;
 import mca.enums.EnumRelation;
 import mca.enums.EnumTrait;
 import mca.inventory.Inventory;
+import mca.item.ItemVillagerEditor;
 import mca.network.packets.PacketNotifyPlayer;
 import mca.network.packets.PacketOnEngagement;
 import mca.network.packets.PacketOnVillagerProcreate;
+import mca.network.packets.PacketOpenGui;
 import mca.network.packets.PacketProcreate;
 import mca.network.packets.PacketSetChore;
 import mca.network.packets.PacketSetFamilyTree;
@@ -117,6 +120,8 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 	public String spousePlayerName = "";
 	public String monarchPlayerName = "";
 	public String texture = "textures/entity/steve.png";
+	public String currentActorScript = "";
+	public String actorTitle = "";
 	public int mcaID;
 	public int generation;
 	public int profession;
@@ -137,6 +142,7 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 	public int bedPosX = 0;
 	public int bedPosY = 0;
 	public int bedPosZ = 0;
+	public int actorActionProgress = 0;
 	public boolean hasBed = false;
 	public boolean isMale;
 	public boolean isSleeping;
@@ -168,6 +174,7 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 	public boolean hasBaby;
 	public boolean doApplyHeight = Utility.getBooleanWithProbability(40);
 	public boolean doApplyGirth = Utility.getBooleanWithProbability(30);
+	public boolean isInActorMode = false;
 	public double homePointX;
 	public double homePointY;
 	public double homePointZ;
@@ -196,6 +203,7 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 
 	public transient EnumMood mood = EnumMood.Passive;
 	public transient EnumTrait trait = EnumTrait.None;
+	public transient ActorScriptHandler scriptHandler;
 	public transient EntityLivingBase target;
 	public transient boolean sentSyncRequest;
 	public transient boolean addedAI;
@@ -303,6 +311,7 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 			updateDivorce();
 			updateProcreationWithPlayer();
 			updateProcreationWithVillager();
+			updateScript();
 
 			//Check if inventory should be opened.
 			if (doOpenInventory)
@@ -398,7 +407,8 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 		miningChore.writeChoreToNBT(nbt);
 		huntingChore.writeChoreToNBT(nbt);
 		tickMarkerBaby.writeMarkerToNBT(this, nbt);
-
+		scriptHandler.writeHandlerToNBT(this, nbt);
+		
 		nbt.setString("texture", texture);
 
 		NBTHelper.autoWriteEntityToNBT(this, nbt, AbstractChild.class, EntityPlayerChild.class, EntityVillagerChild.class, EntityVillagerAdult.class, AbstractEntity.class);
@@ -419,6 +429,12 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 	{
 		super.readEntityFromNBT(nbt);
 
+		//Load the script handler.
+		if (scriptHandler == null)
+		{
+			scriptHandler = new ActorScriptHandler(this);
+		}
+		
 		inventory.readInventoryFromNBT(nbt);
 		familyTree.readTreeFromNBT(nbt);
 		combatChore.readChoreFromNBT(nbt);
@@ -428,7 +444,8 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 		miningChore.readChoreFromNBT(nbt);
 		huntingChore.readChoreFromNBT(nbt);
 		tickMarkerBaby.readMarkerFromNBT(this, nbt);
-
+		scriptHandler.readHandlerFromNBT(this, nbt);
+		
 		texture = nbt.getString("texture");
 
 		NBTHelper.autoReadEntityFromNBT(this, nbt, AbstractChild.class, EntityPlayerChild.class, EntityVillagerChild.class, EntityVillagerAdult.class, AbstractEntity.class);
@@ -697,6 +714,27 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 	{
 		lastInteractingPlayer = player.getCommandSenderName();
 
+		if (isInActorMode)
+		{
+			final ItemStack itemStack = player.inventory.getCurrentItem();
+			
+			if (!worldObj.isRemote)
+			{
+				if (itemStack != null && itemStack.getItem() instanceof ItemVillagerEditor)
+				{
+					MCA.packetHandler.sendPacketToPlayer(new PacketOpenGui(getEntityId(), Constants.ID_GUI_EDITOR), (EntityPlayerMP) player);
+					return true;
+				}
+				
+				else
+				{
+					scriptHandler.clearWaitFlag();
+				}
+			}
+
+			return false;
+		}
+
 		if (!playerMemoryMap.containsKey(player.getCommandSenderName()))
 		{
 			playerMemoryMap.put(player.getCommandSenderName(), new PlayerMemory(player.getCommandSenderName()));
@@ -712,17 +750,17 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 		{
 			return entity == null ? false : super.canEntityBeSeen(entity);
 		}
-		
+
 		catch (ClassCastException e)
 		{
 			//Odd issue with tile entities occurs here.
 		}
-		
+
 		catch (NullPointerException e)
 		{
 			//Crashes caused by other mods. No idea what's going on there.
 		}
-		
+
 		return false;
 	}
 
@@ -988,11 +1026,22 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 				//FIXME
 				//				String prefix = MCA.getInstance().getModProperties().villagerChatPrefix.replace("&", Font.SECTION_SIGN);
 				//				player.addChatMessage(new ChatComponentText(prefix + getTitle(MCA.getInstance().getIdOfPlayer(player), true) + ": " + text));
+
 				player.addChatMessage(new ChatComponentText(getTitle(MCA.getInstance().getIdOfPlayer(player), true) + ": " + text));
 			}
 
 			MCA.packetHandler.sendPacketToServer(new PacketSetFieldValue(getEntityId(), "isSleeping", isSleeping));
 			MCA.packetHandler.sendPacketToServer(new PacketSetFieldValue(getEntityId(), "idleTicks", idleTicks));
+		}
+	}
+
+	public void sayScripted(String text)
+	{
+		final EntityPlayer player = worldObj.getPlayerEntityByName(lastInteractingPlayer);
+
+		if (player != null)
+		{
+			player.addChatMessage(new ChatComponentText(actorTitle + ": " + text));
 		}
 	}
 
@@ -2365,7 +2414,7 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 						}
 					}
 				}
-				
+
 				else //Player is no longer logged on.
 				{
 					MCA.packetHandler.sendPacketToAllPlayers(new PacketProcreate(TypeIDs.Procreation.STOP, getEntityId()));
@@ -2640,7 +2689,7 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 	 */
 	private void updateGreeting()
 	{
-		if (!worldObj.isRemote && !isInChoreMode && !isFollowing && !name.equals(""))
+		if (!worldObj.isRemote && !isInChoreMode && !isFollowing && !name.equals("") && !isInActorMode)
 		{
 			final EntityPlayer nearestPlayer = worldObj.getClosestPlayer(posX, posY, posZ, -1);
 
@@ -3227,6 +3276,27 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 	 */
 	private void updateDebug()
 	{
+	}
+
+	private void updateScript() 
+	{
+		if (isInActorMode && !worldObj.isRemote)
+		{
+			if (scriptHandler == null)
+			{
+				scriptHandler = new ActorScriptHandler(this);
+			}
+
+			try
+			{
+				scriptHandler.execute();
+			}
+
+			catch (Exception e)
+			{
+				MCA.getInstance().getLogger().log("Error while executing script: " + currentActorScript + ": line " + actorActionProgress);
+			}
+		}
 	}
 
 	/**

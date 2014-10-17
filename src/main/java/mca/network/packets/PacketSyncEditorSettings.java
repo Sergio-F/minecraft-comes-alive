@@ -32,6 +32,8 @@ public class PacketSyncEditorSettings extends AbstractPacket implements IMessage
 	private int traitId;
 	private Inventory inventory;
 	private String texture;
+	private String currentActorScript;
+	private boolean isInActorMode;
 
 	public PacketSyncEditorSettings()
 	{
@@ -49,6 +51,8 @@ public class PacketSyncEditorSettings extends AbstractPacket implements IMessage
 		traitId = entity.traitId;
 		inventory = entity.inventory;
 		texture = entity.getTexture();
+		currentActorScript = entity.currentActorScript;
+		isInActorMode = entity.isInActorMode;
 	}
 
 	@Override
@@ -64,6 +68,8 @@ public class PacketSyncEditorSettings extends AbstractPacket implements IMessage
 		traitId = byteBuf.readInt();
 		inventory = (Inventory) ByteBufIO.readObject(byteBuf);
 		texture = (String) ByteBufIO.readObject(byteBuf);
+		currentActorScript = (String) ByteBufIO.readObject(byteBuf);
+		isInActorMode = byteBuf.readBoolean();
 	}
 
 	@Override
@@ -79,6 +85,8 @@ public class PacketSyncEditorSettings extends AbstractPacket implements IMessage
 		byteBuf.writeInt(traitId);
 		ByteBufIO.writeObject(byteBuf, inventory);
 		ByteBufIO.writeObject(byteBuf, texture);
+		ByteBufIO.writeObject(byteBuf, currentActorScript);
+		byteBuf.writeBoolean(isInActorMode);
 	}
 
 	@Override
@@ -98,6 +106,8 @@ public class PacketSyncEditorSettings extends AbstractPacket implements IMessage
 			entity.traitId = packet.traitId;
 			entity.inventory = packet.inventory;
 			entity.texture = packet.texture;
+			entity.currentActorScript = packet.currentActorScript;
+			entity.isInActorMode = packet.isInActorMode;
 
 			MCA.packetHandler.sendPacketToAllPlayers(new PacketSync(entity.getEntityId(), entity));
 		}
