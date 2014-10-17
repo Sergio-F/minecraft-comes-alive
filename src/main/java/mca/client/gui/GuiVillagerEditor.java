@@ -179,7 +179,7 @@ public class GuiVillagerEditor extends AbstractGui
 		actorScriptLocationField.setMaxStringLength(255);
 		actorScriptLocationField.setText(editingVillager.currentActorScript);
 		
-		actorNameField = new GuiTextField(fontRendererObj, width / 2 - 205, height / 2 - 35, 150, 20);
+		actorNameField = new GuiTextField(fontRendererObj, width / 2 - 205, height / 2 - 20, 150, 20);
 		actorNameField.setMaxStringLength(255);
 		actorNameField.setText(editingVillager.actorTitle);
 		
@@ -901,7 +901,7 @@ public class GuiVillagerEditor extends AbstractGui
 		buttonList.clear();
 		buttonList.add(backButton = new GuiButton(19, width / 2 - 120, height / 2 + 85, 50, 20, MCA.getInstance().getLanguageLoader().getString("gui.button.back")));
 		
-		buttonList.add(actorModeButton = new GuiButton(1, width / 2 - 200, height / 2 - 0, 120, 20, "Actor Mode: " + editingVillager.isInActorMode));
+		buttonList.add(actorModeButton = new GuiButton(1, width / 2 - 200, height / 2 + 20, 120, 20, "Actor Mode: " + editingVillager.isInActorMode));
 	}
 
 	private void drawFamilyTreeText()
@@ -1062,6 +1062,7 @@ public class GuiVillagerEditor extends AbstractGui
 			
 			drawString(fontRendererObj, "Script name:", width / 2 - 200, height / 2 - 90, 0xffffff);
 			drawString(fontRendererObj, "(Save scripts as .txt within config/MCA/Scripts)", width / 2 - 200, height / 2 - 50, 0xa0a0a0);
+			drawString(fontRendererObj, "Actor name:", width / 2 - 200, height / 2 - 33, 0xffffff);
 			
 			if (!scriptValidFlag)
 			{
