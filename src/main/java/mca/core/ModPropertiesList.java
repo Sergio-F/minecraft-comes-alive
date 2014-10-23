@@ -47,6 +47,9 @@ public class ModPropertiesList implements Serializable
 	/** A villager's base amount of maximum health. Guards have twice as much. */
 	public int villagerBaseHealth = 20;
 
+	/** Does your spouse and children get hungy? */
+	public boolean doAllowHunger = false;
+	
 	/** Should children growth be halted? */
 	public boolean haltChildGrowth = false;
 
