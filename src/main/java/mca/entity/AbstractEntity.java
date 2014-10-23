@@ -137,6 +137,9 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 	public int bedPosX = 0;
 	public int bedPosY = 0;
 	public int bedPosZ = 0;
+	public int timeSpentHungry = 0;
+	public int timeSpentStarving = 0;
+	public int starvationLevel = 0;
 	public boolean hasBed = false;
 	public boolean isMale;
 	public boolean isSleeping;
@@ -168,9 +171,11 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 	public boolean hasBaby;
 	public boolean doApplyHeight = Utility.getBooleanWithProbability(40);
 	public boolean doApplyGirth = Utility.getBooleanWithProbability(30);
+	public boolean isStarving;
 	public double homePointX;
 	public double homePointY;
 	public double homePointZ;
+	public double hungerLevel = 1.0D;
 	public float moodPointsHappy;
 	public float moodPointsSad;
 	public float moodPointsAnger;
@@ -303,6 +308,8 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 			updateDivorce();
 			updateProcreationWithPlayer();
 			updateProcreationWithVillager();
+			updateHungerLevel();
+			updateDebug();
 
 			//Check if inventory should be opened.
 			if (doOpenInventory)
@@ -474,6 +481,11 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 			{
 				//Skip!
 				return;
+			}
+
+			if (starvationLevel >= 3)
+			{
+				damageAmount *= 1.5F; //Amplify damage if starving
 			}
 
 			final float unabsorbedDamage = ISpecialArmor.ArmorProperties.ApplyArmor(this, inventory.armorItems, damageSource, damageAmount);
@@ -712,17 +724,17 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 		{
 			return entity == null ? false : super.canEntityBeSeen(entity);
 		}
-		
+
 		catch (ClassCastException e)
 		{
 			//Odd issue with tile entities occurs here.
 		}
-		
+
 		catch (NullPointerException e)
 		{
 			//Crashes caused by other mods. No idea what's going on there.
 		}
-		
+
 		return false;
 	}
 
@@ -2365,7 +2377,7 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 						}
 					}
 				}
-				
+
 				else //Player is no longer logged on.
 				{
 					MCA.packetHandler.sendPacketToAllPlayers(new PacketProcreate(TypeIDs.Procreation.STOP, getEntityId()));
@@ -2595,7 +2607,10 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 
 					if (getDistanceToEntity(player) > 4.5D)
 					{
-						final boolean pathSet = entityPathController.getNavigator().tryMoveToEntityLiving(player, entityPathController instanceof EntityHorse ? Constants.SPEED_HORSE_RUN : player.isSprinting() ? Constants.SPEED_SPRINT : Constants.SPEED_WALK);
+						float speed = entityPathController instanceof EntityHorse ? Constants.SPEED_HORSE_RUN : player.isSprinting() ? Constants.SPEED_SPRINT : Constants.SPEED_WALK;
+						if (starvationLevel >= 1) speed /= 1.5F; //Half speed when starving.
+
+						final boolean pathSet = entityPathController.getNavigator().tryMoveToEntityLiving(player, speed);
 						entityPathController.getNavigator().onUpdateNavigation();
 
 						if (!pathSet && getDistanceToEntity(player) >= 10.0D)
@@ -2778,7 +2793,9 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 
 			if (getHealth() < getMaxHealth() && getHealth() > 0)
 			{
-				if (healthRegenerationTicks >= 20)
+				float interval = starvationLevel >= 2 ? 100 : 20;
+
+				if (healthRegenerationTicks >= interval)
 				{
 					setHealth(getHealth() + 1);
 					healthRegenerationTicks = 0;
@@ -3227,6 +3244,125 @@ public abstract class AbstractEntity extends AbstractSerializableEntity implemen
 	 */
 	private void updateDebug()
 	{
+	}
+
+	private void updateHungerLevel() 
+	{
+		if (!worldObj.isRemote)
+		{
+			//Get the owner player, make sure they are online.
+			EntityPlayer ownerPlayer = isMarriedToPlayer ? worldObj.getPlayerEntityByName(spousePlayerName) : this instanceof EntityPlayerChild ? worldObj.getPlayerEntityByName(((EntityPlayerChild)this).ownerPlayerName): null;
+
+			if (MCA.getInstance().getModProperties().doAllowHunger && ownerPlayer != null)
+			{
+				double decrementRate = 1.0D / 24000.0D;
+
+				if (hungerLevel <= 0.0D) //Hungry at this point.
+				{
+					if (!tryEatFood())
+					{
+						if (isStarving)
+						{
+							updateStarvation(ownerPlayer);
+						}
+
+						else
+						{
+							updateTimeSpentHungry(ownerPlayer);
+						}
+					}
+				}
+
+				else
+				{
+					hungerLevel -= decrementRate;
+				}
+			}
+		}
+	}
+
+	private boolean tryEatFood() 
+	{
+		int foodSlot = inventory.getFirstSlotContainingFood();
+
+		if (foodSlot != -1)
+		{
+			while (starvationLevel > 0)
+			{
+				try
+				{
+					inventory.decrStackSize(foodSlot, 1);
+				}
+				
+				catch (Exception e)
+				{
+					//Stop on exception, different food slot will be assigned as the next update comes around.
+					return false;
+				}
+				
+				starvationLevel--;
+			}
+
+			//Reset all hunger-related values if starvation is over.
+			if (starvationLevel == 0)
+			{
+				hungerLevel = 1.0D;
+				timeSpentHungry = 0;
+				timeSpentStarving = 0;
+				starvationLevel = 0;
+				isStarving = false;
+			}
+			
+			return true;
+		}
+
+		return false;
+	}
+
+	private void updateTimeSpentHungry(EntityPlayer ownerPlayer)
+	{
+		timeSpentHungry++;
+
+		switch (timeSpentHungry)
+		{
+		case 8000:	notifyPlayer(ownerPlayer, name + " is getting hungry!");  	   				 break; // 8000
+		case 16000: notifyPlayer(ownerPlayer, name + " needs food immediately!");  				 break; // 16000
+		case 24000: notifyPlayer(ownerPlayer, name + " has begun starving!"); isStarving = true; break; // 24000
+		default:
+			if (timeSpentHungry > 24000)
+			{
+				notifyPlayer(ownerPlayer, name + " has begun starving!"); isStarving = true;
+				isStarving = true;
+			}
+
+			break;
+		}
+	}
+
+	private void updateStarvation(EntityPlayer ownerPlayer)
+	{
+		timeSpentStarving++;
+
+		boolean doNotify = false;
+
+		switch (timeSpentStarving)
+		{
+		case 8000:  starvationLevel = 1; doNotify = true; break;
+		case 16000: starvationLevel = 2; doNotify = true; break;
+		case 24000: starvationLevel = 3; doNotify = true; break;
+		case 32000: starvationLevel = 4; doNotify = true; break;
+		}
+
+		if (doNotify)
+		{
+			switch (starvationLevel)
+			{
+			case 1: notifyPlayer(ownerPlayer, name + " is starving! They can no longer move as fast."); break;
+			case 2: notifyPlayer(ownerPlayer, name + " is starving! Their health regeneration has been slowed."); break;
+			case 3: notifyPlayer(ownerPlayer, name + " is starving and close to death! Any damage taken is amplified."); break;
+			case 4: notifyPlayer(ownerPlayer, name + " has died from starvation."); damageEntity(DamageSource.starve, 10000.0F); onDeath(DamageSource.starve); break;
+			}
+		}
 	}
 
 	/**
