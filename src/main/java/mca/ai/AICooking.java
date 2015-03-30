@@ -10,12 +10,13 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntityFurnace;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 import radixcore.constant.Time;
 import radixcore.data.WatchedBoolean;
 import radixcore.math.Point3D;
+import radixcore.util.BlockPosHelper;
 import radixcore.util.RadixLogic;
 import radixcore.util.RadixMath;
-import cpw.mods.fml.common.registry.GameRegistry;
 
 public class AICooking extends AbstractToggleAI
 {
@@ -126,9 +127,9 @@ public class AICooking extends AbstractToggleAI
 	
 	private boolean getFuelFromInventory()
 	{
-		for (int i = 0; i < owner.getInventory().getSizeInventory(); i++)
+		for (int i = 0; i < owner.getEntityInventory().getSizeInventory(); i++)
 		{
-			ItemStack stack = owner.getInventory().getStackInSlot(i);
+			ItemStack stack = owner.getEntityInventory().getStackInSlot(i);
 
 			if (stack != null)
 			{
@@ -148,7 +149,7 @@ public class AICooking extends AbstractToggleAI
 						hasFuel = true;
 						fuelUsesRemaining = fuelValue;
 
-						owner.getInventory().decrStackSize(owner.getInventory().getFirstSlotContainingItem(stack.getItem()), 1);
+						owner.getEntityInventory().decrStackSize(owner.getEntityInventory().getFirstSlotContainingItem(stack.getItem()), 1);
 					}
 				}
 
@@ -199,9 +200,9 @@ public class AICooking extends AbstractToggleAI
 
 	private void getCookableFoodFromInventory()
 	{
-		for (int i = 0; i < owner.getInventory().getSizeInventory(); i++)
+		for (int i = 0; i < owner.getEntityInventory().getSizeInventory(); i++)
 		{
-			ItemStack stack = owner.getInventory().getStackInSlot(i);
+			ItemStack stack = owner.getEntityInventory().getStackInSlot(i);
 
 			for (final CookableFood entry : RegistryMCA.getCookableFoodList())
 			{
@@ -226,8 +227,8 @@ public class AICooking extends AbstractToggleAI
 
 	private boolean isFurnaceStillPresent()
 	{
-		return owner.worldObj.getBlock(furnacePos.iPosX, furnacePos.iPosY, furnacePos.iPosZ) == Blocks.furnace || 
-				owner.worldObj.getBlock(furnacePos.iPosX, furnacePos.iPosY, furnacePos.iPosZ) == Blocks.lit_furnace;
+		return BlockPosHelper.getBlock(owner.worldObj, furnacePos.iPosX, furnacePos.iPosY, furnacePos.iPosZ) == Blocks.furnace || 
+				BlockPosHelper.getBlock(owner.worldObj, furnacePos.iPosX, furnacePos.iPosY, furnacePos.iPosZ) == Blocks.lit_furnace;
 	}
 
 
@@ -241,9 +242,9 @@ public class AICooking extends AbstractToggleAI
 			{
 				if (cookingTicks <= cookingInterval)
 				{
-					if (owner.worldObj.getBlock(furnacePos.iPosX, furnacePos.iPosY, furnacePos.iPosZ) != Blocks.lit_furnace)
+					if (BlockPosHelper.getBlock(owner.worldObj, furnacePos.iPosX, furnacePos.iPosY, furnacePos.iPosZ) != Blocks.lit_furnace)
 					{
-						BlockFurnace.updateFurnaceBlockState(true, owner.worldObj, furnacePos.iPosX, furnacePos.iPosY, furnacePos.iPosZ);
+						BlockFurnace.func_176446_a(true, owner.worldObj, furnacePos.toBlockPos());
 					}
 					
 					cookingTicks++;
@@ -253,9 +254,9 @@ public class AICooking extends AbstractToggleAI
 				{
 					CookableFood foodObj = RegistryMCA.getCookableFoodList().get(indexOfCookingFood);
 					
-					if (owner.getInventory().contains(foodObj.getFoodRaw()))
+					if (owner.getEntityInventory().contains(foodObj.getFoodRaw()))
 					{
-						owner.getInventory().decrStackSize(owner.getInventory().getFirstSlotContainingItem(foodObj.getFoodRaw()), 1);
+						owner.getEntityInventory().decrStackSize(owner.getEntityInventory().getFirstSlotContainingItem(foodObj.getFoodRaw()), 1);
 						addItemStackToInventory(new ItemStack(foodObj.getFoodCooked(), 1, 0));
 					}
 
@@ -263,7 +264,7 @@ public class AICooking extends AbstractToggleAI
 					hasCookableFood = false;
 					cookingTicks = 0;
 					fuelUsesRemaining--;
-					BlockFurnace.updateFurnaceBlockState(false, owner.worldObj, furnacePos.iPosX, furnacePos.iPosY, furnacePos.iPosZ);
+					BlockFurnace.func_176446_a(false, owner.worldObj, furnacePos.toBlockPos());
 					
 					if (fuelUsesRemaining <= 0)
 					{

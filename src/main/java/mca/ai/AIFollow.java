@@ -8,8 +8,10 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.passive.EntityHorse;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 import radixcore.data.WatchedString;
+import radixcore.util.BlockPosHelper;
 import radixcore.util.RadixMath;
 
 public class AIFollow extends AbstractAI
@@ -66,14 +68,14 @@ public class AIFollow extends AbstractAI
 				if (distanceToPlayer >= 10.0D)
 				{
 					final int playerX = net.minecraft.util.MathHelper.floor_double(entityPlayer.posX) - 2;
-					final int playerY = net.minecraft.util.MathHelper.floor_double(entityPlayer.boundingBox.minY);
+					final int playerY = net.minecraft.util.MathHelper.floor_double(entityPlayer.getBoundingBox().minY);
 					final int playerZ = net.minecraft.util.MathHelper.floor_double(entityPlayer.posZ) - 2;
 
 					for (int i = 0; i <= 4; ++i)
 					{
 						for (int i2 = 0; i2 <= 4; ++i2)
 						{
-							if ((i < 1 || i2 < 1 || i > 3 || i2 > 3) && World.doesBlockHaveSolidTopSurface(owner.worldObj, playerX + i, playerY - 1, playerZ + i2) && !owner.worldObj.getBlock(playerX + i, playerY, playerZ + i2).isNormalCube() && !owner.worldObj.getBlock(playerX + i, playerY + 1, playerZ + i2).isNormalCube())
+							if ((i < 1 || i2 < 1 || i > 3 || i2 > 3) && World.doesBlockHaveSolidTopSurface(owner.worldObj, new BlockPos(playerX + i, playerY - 1, playerZ + i2)) && !BlockPosHelper.getBlock(owner.worldObj, playerX + i, playerY, playerZ + i2).isNormalCube() && !BlockPosHelper.getBlock(owner.worldObj, playerX + i, playerY + 1, playerZ + i2).isNormalCube())
 							{
 								entityPathController.setLocationAndAngles(playerX + i + 0.5F, playerY, playerZ + i2 + 0.5F, entityPlayer.rotationYaw, entityPlayer.rotationPitch);
 								entityPathController.getNavigator().clearPathEntity();

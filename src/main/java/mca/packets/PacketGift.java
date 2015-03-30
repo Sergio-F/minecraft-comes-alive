@@ -25,13 +25,13 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import radixcore.constant.Particle;
 import radixcore.packets.AbstractPacket;
 import radixcore.util.RadixLogic;
 import radixcore.util.RadixMath;
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
-import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
-import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 
 public class PacketGift extends AbstractPacket implements IMessage, IMessageHandler<PacketGift, IMessage>
 {
@@ -130,7 +130,7 @@ public class PacketGift extends AbstractPacket implements IMessage, IMessageHand
 				removeItem = true;
 				removeCount = 1;
 				
-				human.getInventory().addItemStackToInventory(stack);
+				human.getEntityInventory().addItemStackToInventory(stack);
 			}
 			
 			else if ((item == Items.cake || Block.getBlockFromItem(item) == Blocks.cake) && human.getAI(AIProgressStory.class).getProgressionStep() == EnumProgressionStep.TRY_FOR_BABY)

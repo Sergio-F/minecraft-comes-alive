@@ -50,7 +50,7 @@ public class RenderHuman extends RenderBiped
 
 	public RenderHuman()
 	{
-		super(new ModelHuman(0.0F), 0.5F);
+		super(Minecraft.getMinecraft().getRenderManager(), new ModelHuman(0.0F), 0.5F);
 
 		modelBipedMain = (ModelBiped) mainModel;
 		modelArmorPlate = new ModelBiped(1.0F);

@@ -18,11 +18,13 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 import radixcore.constant.Font.Color;
 import radixcore.constant.Font.Format;
 import radixcore.constant.Time;
-import cpw.mods.fml.common.registry.GameRegistry;
 
 public class ItemBaby extends Item 
 {
@@ -36,7 +38,7 @@ public class ItemBaby extends Item
 		this.setCreativeTab(MCA.getCreativeTabMain());
 		this.setMaxStackSize(1);
 		this.setUnlocalizedName(itemName);
-		this.setTextureName("mca:" + itemName);
+//		this.setTextureName("mca:" + itemName);
 
 		GameRegistry.registerItem(this, itemName);
 	}
@@ -53,10 +55,10 @@ public class ItemBaby extends Item
 			{
 				EntityPlayer player = (EntityPlayer) entity;
 
-				itemStack.stackTagCompound = new NBTTagCompound();
-				itemStack.stackTagCompound.setString("name", "Unnamed");
-				itemStack.stackTagCompound.setInteger("age", 0);
-				itemStack.stackTagCompound.setString("owner", player.getCommandSenderName());
+				itemStack.setTagCompound(new NBTTagCompound());
+				itemStack.getTagCompound().setString("name", "Unnamed");
+				itemStack.getTagCompound().setInteger("age", 0);
+				itemStack.getTagCompound().setString("owner", player.getName());
 
 				if (player.capabilities.isCreativeMode)
 				{
@@ -73,7 +75,7 @@ public class ItemBaby extends Item
 
 
 	@Override
-	public boolean onItemUse(ItemStack stack, EntityPlayer player, World worldObj, int posX, int posY, int posZ, int meta, float playerPosX, float playerPosY, float playerPosZ) 
+	public boolean onItemUse(ItemStack stack, EntityPlayer player, World worldObj, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ) 
 	{
 		if (!worldObj.isRemote && isReadyToGrowUp(stack))
 		{
@@ -91,7 +93,7 @@ public class ItemBaby extends Item
 			{
 				motherName = data.spouseName.getString();
 				motherId = data.spousePermanentId.getInt();
-				fatherName = player.getCommandSenderName();
+				fatherName = player.getName();
 				fatherId = data.permanentId.getInt();
 			}
 			
@@ -99,40 +101,13 @@ public class ItemBaby extends Item
 			{
 				fatherName = data.spouseName.getString();
 				fatherId = data.spousePermanentId.getInt();
-				motherName = player.getCommandSenderName();
+				motherName = player.getName();
 				motherId = data.permanentId.getInt();				
 			}
-			
-//			if (playerSpouse != null) //Spouse could be dead.
-//			{
-//				if (isPlayerMale)
-//				{
-//					motherName = playerSpouse.getName();
-//					motherId = playerSpouse.getPermanentId();
-//				}
-//
-//				else
-//				{
-//					fatherName = playerSpouse.getName();
-//					fatherId = playerSpouse.getPermanentId();
-//				}
-//			}
-//
-//			if (isPlayerMale)
-//			{
-//				fatherName = player.getCommandSenderName();
-//				fatherId = data.permanentId.getInt();
-//			}
-//
-//			else
-//			{
-//				motherName = player.getCommandSenderName();
-//				motherId = data.permanentId.getInt();
-//			}
 
 			final EntityHuman child = new EntityHuman(worldObj, baby.isBoy, true, motherName, fatherName, motherId, fatherId, true);
-			child.setPosition(posX, posY + 1, posZ);
-			child.setName(stack.stackTagCompound.getString("name"));
+			child.setPosition(pos.getX(), pos.getY() + 1, pos.getZ());
+			child.setName(stack.getTagCompound().getString("name"));
 			worldObj.spawnEntityInWorld(child);
 			
 			PlayerMemory childMemory = child.getPlayerMemory(player);
@@ -152,7 +127,7 @@ public class ItemBaby extends Item
 	@Override
 	public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer player) 
 	{
-		if (!world.isRemote && itemStack.stackTagCompound.getString("name").equals("Unnamed"))
+		if (!world.isRemote && itemStack.getTagCompound().getString("name").equals("Unnamed"))
 		{
 			ItemBaby baby = (ItemBaby) itemStack.getItem();
 			MCA.getPacketHandler().sendPacketToPlayer(new PacketOpenBabyNameGUI(baby.isBoy), (EntityPlayerMP)player);
@@ -181,13 +156,13 @@ public class ItemBaby extends Item
 		{
 			//Text color is blue for boys, purple for girls.
 			String textColor = ((ItemBaby)itemStack.getItem()).isBoy ? Color.AQUA : Color.LIGHTPURPLE;
-			float ageInMinutes = (float)itemStack.stackTagCompound.getInteger("age") / Time.MINUTE;
+			float ageInMinutes = (float)itemStack.getTagCompound().getInteger("age") / Time.MINUTE;
 
 			//Owner name is You for the current owner. Otherwise, the player's name.
-			String ownerName = itemStack.stackTagCompound.getString("owner");
-			ownerName = ownerName.equals(entityPlayer.getCommandSenderName()) ? "You" : ownerName;
+			String ownerName = itemStack.getTagCompound().getString("owner");
+			ownerName = ownerName.equals(entityPlayer.getName()) ? "You" : ownerName;
 
-			infoList.add(textColor + "Name: " + Format.RESET + itemStack.stackTagCompound.getString("name"));
+			infoList.add(textColor + "Name: " + Format.RESET + itemStack.getTagCompound().getString("name"));
 			infoList.add(textColor + "Age: "  + Format.RESET + nearestTenth.format(ageInMinutes) + " minutes.");
 			infoList.add(textColor + "Parent: " + Format.RESET + ownerName);
 
@@ -202,9 +177,9 @@ public class ItemBaby extends Item
 	{
 		if (itemStack.hasTagCompound())
 		{
-			int age = itemStack.stackTagCompound.getInteger("age");
+			int age = itemStack.getTagCompound().getInteger("age");
 			age++;
-			itemStack.stackTagCompound.setInteger("age", age);
+			itemStack.getTagCompound().setInteger("age", age);
 		}
 	}
 
@@ -212,7 +187,7 @@ public class ItemBaby extends Item
 	{
 		if (itemStack.hasTagCompound())
 		{
-			final float ageInMinutes = (float)itemStack.stackTagCompound.getInteger("age") / Time.MINUTE;
+			final float ageInMinutes = (float)itemStack.getTagCompound().getInteger("age") / Time.MINUTE;
 			return ageInMinutes >= MCA.getConfig().babyGrowUpTime;
 		}
 

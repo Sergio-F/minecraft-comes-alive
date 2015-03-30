@@ -132,7 +132,7 @@
 //
 //				if (delta <= 3.0D)
 //				{
-//					BlockDoor doorBlock = (BlockDoor) owner.worldObj.getBlock(target.iPosX, target.iPosY, target.iPosZ);
+//					BlockDoor doorBlock = (BlockDoor) BlockPosHelper.getBlock(owner.worldObj, target.iPosX, target.iPosY, target.iPosZ);
 //					FuncMappings.changeDoorState(doorBlock, target, owner.worldObj, true);
 //				}
 //			}
@@ -161,7 +161,7 @@
 //
 //				if (delta <= 3.0D)
 //				{
-//					BlockDoor doorBlock = (BlockDoor) owner.worldObj.getBlock(target.iPosX, target.iPosY, target.iPosZ);
+//					BlockDoor doorBlock = (BlockDoor) BlockPosHelper.getBlock(owner.worldObj, target.iPosX, target.iPosY, target.iPosZ);
 //					FuncMappings.changeDoorState(doorBlock, target, owner.worldObj, true);
 //				}
 //			}

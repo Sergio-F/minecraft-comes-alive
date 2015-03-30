@@ -41,8 +41,8 @@ public abstract class AbstractToggleAI extends AbstractAI
 	{
 		if (owner.getPersonality() == EnumPersonality.CURIOUS && RadixLogic.getBooleanWithProbability(10))
 		{
-			owner.getInventory().addItemStackToInventory(stack);
-			return owner.getInventory().addItemStackToInventory(stack.copy());
+			owner.getEntityInventory().addItemStackToInventory(stack);
+			return owner.getEntityInventory().addItemStackToInventory(stack.copy());
 		}
 		
 		else if (owner.getPersonality() == EnumPersonality.GREEDY && RadixLogic.getBooleanWithProbability(10))
@@ -52,7 +52,7 @@ public abstract class AbstractToggleAI extends AbstractAI
 		
 		else if (owner.getPersonality() != EnumPersonality.GREEDY)
 		{
-			return owner.getInventory().addItemStackToInventory(stack);
+			return owner.getEntityInventory().addItemStackToInventory(stack);
 		}
 		
 		return false;

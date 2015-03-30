@@ -16,6 +16,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import radixcore.data.WatchedBoolean;
 import radixcore.math.Point3D;
+import radixcore.util.BlockPosHelper;
 import radixcore.util.RadixLogic;
 import radixcore.util.RadixMath;
 
@@ -78,7 +79,7 @@ public class AIWoodcutting extends AbstractToggleAI
 				if (point != null)
 				{
 					//Follow the point down until logs are NOT found, so we have the base of the tree.
-					while (owner.worldObj.getBlock(point.iPosX, point.iPosY, point.iPosZ) == apiEntry.getLogBlock())
+					while (BlockPosHelper.getBlock(owner.worldObj, point.iPosX, point.iPosY, point.iPosZ) == apiEntry.getLogBlock())
 					{
 						point.iPosY--;
 
@@ -89,7 +90,7 @@ public class AIWoodcutting extends AbstractToggleAI
 					}
 
 					//Follow back up and make sure we have the base. Not sure why, simply adding 1 caused issues every now and then.
-					while (owner.worldObj.getBlock(point.iPosX, point.iPosY, point.iPosZ) != apiEntry.getLogBlock())
+					while (BlockPosHelper.getBlock(owner.worldObj, point.iPosX, point.iPosY, point.iPosZ) != apiEntry.getLogBlock())
 					{
 						point.iPosY++;
 
@@ -122,7 +123,7 @@ public class AIWoodcutting extends AbstractToggleAI
 
 					final WoodcuttingEntry apiEntry = RegistryMCA.getWoodcuttingEntryById(apiId);
 					final Block block = apiEntry.getLogBlock();
-					owner.worldObj.setBlock(treeBasePoint.iPosX, treeBasePoint.iPosY + yLevel, treeBasePoint.iPosZ, Blocks.air);
+					BlockPosHelper.setBlock(owner.worldObj, treeBasePoint.iPosX, treeBasePoint.iPosY + yLevel, treeBasePoint.iPosZ, Blocks.air);
 					boolean addedToInventory = addItemStackToInventory(new ItemStack(block, 1, apiEntry.getLogMeta()));
 					boolean toolBroken = owner.damageHeldItem(2);
 
@@ -148,15 +149,15 @@ public class AIWoodcutting extends AbstractToggleAI
 					yLevel++;
 
 					//Check that the next y level still contains a tree, reset if not.
-					final Block nextBlock = owner.worldObj.getBlock(treeBasePoint.iPosX, treeBasePoint.iPosY + yLevel, treeBasePoint.iPosZ);
-					final int nextBlockMeta = owner.worldObj.getBlockMetadata(treeBasePoint.iPosX, treeBasePoint.iPosY + yLevel, treeBasePoint.iPosZ); 
+					final Block nextBlock = BlockPosHelper.getBlock(owner.worldObj, treeBasePoint.iPosX, treeBasePoint.iPosY + yLevel, treeBasePoint.iPosZ);
+					final int nextBlockMeta = BlockPosHelper.getBlockMetadata(owner.worldObj, treeBasePoint.iPosX, treeBasePoint.iPosY + yLevel, treeBasePoint.iPosZ); 
 
 					if (nextBlock != apiEntry.getLogBlock() || nextBlockMeta != apiEntry.getLogMeta())
 					{
 						if (apiEntry.hasSapling() && doReplant)
 						{
-							owner.worldObj.setBlock(treeBasePoint.iPosX, treeBasePoint.iPosY - 1, treeBasePoint.iPosZ, Blocks.dirt);
-							owner.worldObj.setBlock(treeBasePoint.iPosX, treeBasePoint.iPosY, treeBasePoint.iPosZ, apiEntry.getSaplingBlock(), apiEntry.getSaplingMeta(), 2);
+							BlockPosHelper.setBlock(owner.worldObj, treeBasePoint.iPosX, treeBasePoint.iPosY - 1, treeBasePoint.iPosZ, Blocks.dirt);
+							BlockPosHelper.setBlock(owner.worldObj, treeBasePoint.iPosX, treeBasePoint.iPosY, treeBasePoint.iPosZ, apiEntry.getSaplingBlock(), apiEntry.getSaplingMeta(), 2);
 						}
 						
 						yLevel = 0;
@@ -169,12 +170,12 @@ public class AIWoodcutting extends AbstractToggleAI
 			{
 				for (Point3D point : RadixLogic.getNearbyBlocks(owner, Blocks.leaves, 1))
 				{
-					owner.worldObj.setBlock(point.iPosX, point.iPosY, point.iPosZ, Blocks.air);
+					BlockPosHelper.setBlock(owner.worldObj, point.iPosX, point.iPosY, point.iPosZ, Blocks.air);
 				}
 
 				for (Point3D point : RadixLogic.getNearbyBlocks(owner, Blocks.leaves2, 1))
 				{
-					owner.worldObj.setBlock(point.iPosX, point.iPosY, point.iPosZ, Blocks.air);				
+					BlockPosHelper.setBlock(owner.worldObj, point.iPosX, point.iPosY, point.iPosZ, Blocks.air);				
 				}
 
 				if (owner.getNavigator().noPath())
@@ -236,7 +237,7 @@ public class AIWoodcutting extends AbstractToggleAI
 
 	private int calculateCutInterval()
 	{
-		ItemStack bestAxe = owner.getInventory().getBestItemOfType(ItemAxe.class);
+		ItemStack bestAxe = owner.getEntityInventory().getBestItemOfType(ItemAxe.class);
 		int returnAmount = -1;
 
 		if (bestAxe != null)

@@ -22,8 +22,8 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.player.EntityInteractEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import radixcore.math.Point3D;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 
 public class EventHooksForge 
 {
@@ -91,7 +91,7 @@ public class EventHooksForge
 			}
 
 			mob.tasks.addTask(2, new EntityAIAttackOnCollide(mob, EntityHuman.class, moveSpeed, false));
-			mob.targetTasks.addTask(2, new EntityAINearestAttackableTarget(mob, EntityHuman.class, 16, false));
+			mob.targetTasks.addTask(2, new EntityAINearestAttackableTarget(mob, EntityHuman.class, false));
 		}
 	}
 
@@ -117,7 +117,7 @@ public class EventHooksForge
 	@SubscribeEvent
 	public void worldSaveEventHandler(WorldEvent.Unload event)
 	{
-		if (!event.world.isRemote && event.world.provider.dimensionId == 0)
+		if (!event.world.isRemote && event.world.provider.getDimensionId() == 0)
 		{
 			MCA.getCrashWatcher().checkForCrashReports();
 		}

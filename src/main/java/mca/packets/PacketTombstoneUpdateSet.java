@@ -5,12 +5,12 @@ import mca.core.MCA;
 import mca.tile.TileTombstone;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import radixcore.network.ByteBufIO;
 import radixcore.packets.AbstractPacket;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
-import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
-import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 
 public class PacketTombstoneUpdateSet extends AbstractPacket implements IMessage, IMessageHandler<PacketTombstoneUpdateSet, IMessage>
 {

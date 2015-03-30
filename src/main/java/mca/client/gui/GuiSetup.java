@@ -1,6 +1,7 @@
 package mca.client.gui;
 
 import java.awt.Desktop;
+import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 
@@ -17,6 +18,8 @@ import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -27,9 +30,8 @@ import radixcore.constant.Font.Color;
 import radixcore.data.BlockObj;
 import radixcore.data.DataWatcherEx;
 import radixcore.math.Point3D;
+import radixcore.util.BlockPosHelper;
 import radixcore.util.SchematicHandler;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
 public class GuiSetup extends GuiScreen
@@ -70,7 +72,7 @@ public class GuiSetup extends GuiScreen
 	}
 
 	@Override
-	public void handleMouseInput() 
+	public void handleMouseInput() throws IOException 
 	{
 		super.handleMouseInput();
 
@@ -130,7 +132,7 @@ public class GuiSetup extends GuiScreen
 
 				if (y > (int)player.posY - 2)
 				{
-					player.worldObj.setBlock(
+					BlockPosHelper.setBlock(player.worldObj,
 							MCA.destinyCenterPoint.iPosX + entry.getKey().iPosX, 
 							y, 
 							MCA.destinyCenterPoint.iPosZ + entry.getKey().iPosZ, Blocks.air);
@@ -162,7 +164,7 @@ public class GuiSetup extends GuiScreen
 	}
 
 	@Override
-	protected void mouseClicked(int clickX, int clickY, int clicked)
+	protected void mouseClicked(int clickX, int clickY, int clicked) throws IOException
 	{
 		super.mouseClicked(clickX, clickY, clicked);
 
@@ -262,8 +264,8 @@ public class GuiSetup extends GuiScreen
 		{
 			if (nameTextField == null)
 			{
-				nameTextField = new GuiTextField(fontRendererObj, width / 2 - 100, height / 2 - 5, 200, 20);
-				nameTextField.setText(player.getCommandSenderName());
+				nameTextField = new GuiTextField(1, fontRendererObj, width / 2 - 100, height / 2 - 5, 200, 20);
+				nameTextField.setText(player.getName());
 			}
 
 			GuiButton doneButton = new GuiButton(6, width / 2 - 32, height / 2 + 30, 65, 20, "Continue");

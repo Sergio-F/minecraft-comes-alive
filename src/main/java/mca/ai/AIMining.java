@@ -16,6 +16,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import radixcore.constant.Time;
 import radixcore.data.WatchedBoolean;
 import radixcore.math.Point3D;
+import radixcore.util.BlockPosHelper;
 import radixcore.util.RadixLogic;
 import radixcore.util.RadixMath;
 
@@ -61,7 +62,7 @@ public class AIMining extends AbstractToggleAI
 				if (!isBuildingMine && RadixLogic.getNearbyBlocksWithMetadata(owner, Blocks.stone, 11, 10).size() == 0)
 				{
 					final int y = RadixLogic.getSpawnSafeTopLevel(owner.worldObj, (int) owner.posX, (int) owner.posZ);
-					final Block groundBlock = owner.worldObj.getBlock((int)owner.posX, y - 1, (int)owner.posZ);
+					final Block groundBlock = BlockPosHelper.getBlock(owner.worldObj, (int)owner.posX, y - 1, (int)owner.posZ);
 					owner.getAI(AIBuild.class).startBuilding("/assets/mca/schematic/mine1.schematic", true, groundBlock);
 
 					isBuildingMine = true;
@@ -79,7 +80,7 @@ public class AIMining extends AbstractToggleAI
 						if (!nearbyStone.isEmpty())
 						{
 							Point3D point = nearbyStone.get(RadixMath.getNumberInRange(0, nearbyStone.size()));
-							owner.worldObj.setBlockMetadataWithNotify(point.iPosX, point.iPosY, point.iPosZ, 11, 2);
+							BlockPosHelper.setBlock(owner.worldObj, point.iPosX, point.iPosY, point.iPosZ, Blocks.stone, 11);
 							isBuildingMine = false;
 						}
 
@@ -124,7 +125,7 @@ public class AIMining extends AbstractToggleAI
 							addStack = new ItemStack(Blocks.cobblestone);
 						}
 
-						owner.getInventory().addItemStackToInventory(addStack);
+						owner.getEntityInventory().addItemStackToInventory(addStack);
 						owner.damageHeldItem(2);
 					}
 				}
@@ -243,7 +244,7 @@ public class AIMining extends AbstractToggleAI
 		this.isAIActive.setValue(true);
 		this.activityInterval = SEARCH_INTERVAL;
 		
-		ItemStack pickaxe = owner.getInventory().getBestItemOfType(ItemPickaxe.class);
+		ItemStack pickaxe = owner.getEntityInventory().getBestItemOfType(ItemPickaxe.class);
 		
 		if (pickaxe != null)
 		{
@@ -270,7 +271,7 @@ public class AIMining extends AbstractToggleAI
 		this.isAIActive.setValue(true);
 		this.activityInterval = 0;
 		
-		ItemStack pickaxe = owner.getInventory().getBestItemOfType(ItemPickaxe.class);
+		ItemStack pickaxe = owner.getEntityInventory().getBestItemOfType(ItemPickaxe.class);
 		
 		if (pickaxe != null)
 		{

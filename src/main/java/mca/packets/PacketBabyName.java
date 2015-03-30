@@ -11,12 +11,12 @@ import mca.util.TutorialManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import radixcore.network.ByteBufIO;
 import radixcore.packets.AbstractPacket;
 import radixcore.util.RadixLogic;
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
-import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
-import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 
 public class PacketBabyName extends AbstractPacket implements IMessage, IMessageHandler<PacketBabyName, IMessage>
 {

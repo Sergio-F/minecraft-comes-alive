@@ -5,7 +5,6 @@ import java.util.Random;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.server.S2APacketParticles;
-import net.minecraft.util.ChunkCoordinates;
 
 public final class VersionBridge 
 {

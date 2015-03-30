@@ -3,12 +3,11 @@ package mca.core.forge;
 import mca.client.gui.GuiSetup;
 import mca.core.MCA;
 import mca.data.PlayerData;
-import mca.entity.EntityHuman;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockEnchantmentTable;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class EventHooksForgeClient 
 {

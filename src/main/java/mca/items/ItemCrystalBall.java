@@ -11,11 +11,10 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 import radixcore.data.DataWatcherEx;
 import radixcore.item.ItemSingle;
 import radixcore.math.Point3D;
-import radixcore.util.SchematicHandler;
-import cpw.mods.fml.common.registry.GameRegistry;
 
 public class ItemCrystalBall extends ItemSingle
 {

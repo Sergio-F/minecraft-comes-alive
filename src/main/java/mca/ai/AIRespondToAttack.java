@@ -153,7 +153,7 @@ public class AIRespondToAttack extends AbstractAI
 				owner.say("behavior.retaliate.begin", player);
 
 				isRetaliating = true;
-				targetPlayerName = player.getCommandSenderName();
+				targetPlayerName = player.getName();
 			}
 		}
 
